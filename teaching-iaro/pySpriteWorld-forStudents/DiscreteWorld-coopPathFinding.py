@@ -11,10 +11,11 @@ from ontology import Ontology
 from itertools import chain
 import pygame
 import glo
-
+import time
 import random 
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 
 
@@ -294,14 +295,14 @@ def init(_boardname=None):
     game.mask.allow_overlaping_players = True
     #player = game.player
     
-def main():
-    strategie = 2
+def main(strat,iterations):
+    strategie = strat
     #for arg in sys.argv:
-    iterations = 1000 # default
+    iterations = iterations # default
     if len(sys.argv) == 2:
         iterations = int(sys.argv[1])
-    print ("Iterations: ")
-    print (iterations)
+    #print ("Iterations: ")
+    #print (iterations)
 
     init()
     
@@ -320,12 +321,12 @@ def main():
     
     # on localise tous les états initiaux (loc du joueur)
     initStates = [o.get_rowcol() for o in game.layers['joueur']]
-    print ("Init states:", initStates)
+    #print ("Init states:", initStates)
     
     
     # on localise tous les objets ramassables
     goalStates = [o.get_rowcol() for o in game.layers['ramassable']]
-    print ("Goal states:", goalStates)
+    #print ("Goal states:", goalStates)
         
     # on localise tous les murs
     wallStates = [w.get_rowcol() for w in game.layers['obstacle']]
@@ -346,7 +347,7 @@ def main():
         game.layers['ramassable'].add(o)
         game.mainiteration()                
 
-    print(game.layers['ramassable'])
+    #print(game.layers['ramassable'])
     goalStates = [o.get_rowcol() for o in game.layers['ramassable']]
 
     
@@ -356,8 +357,7 @@ def main():
     #-------------------------------
     
         
-    # bon ici on fait juste plusieurs random walker pour exemple...
-    
+
     posPlayers = initStates
     pathPlayer = [] #chaque case de ce tableau va contenir le chemin a faire du joueur i vers une fiole
     wallStatesForJ = [] #tous les obstacles dont les autres joueurs
@@ -481,15 +481,79 @@ def main():
                     break
             
     
-    print ("scores:", score)
+    #print ("scores:", score)
     pygame.quit()
+    return score
     
         
     
    
 
 if __name__ == '__main__':
-    main()
+    iterationGame = 30
+    iterationPlayer = 50
+    one = range(iterationGame)
+    s2 = []
+    l2 = []
+    s3 = []
+    l3 = []
+    for i in range(iterationGame):
+        t_0 = time.process_time()
+        s = main(2,iterationPlayer)
+        cpu_time = time.process_time() - t_0
+        s2.append(s[0]+s[1])
+        l2.append(cpu_time)
+        t_0 = time.process_time()
+        s = main(3,iterationPlayer)
+        cpu_time = time.process_time() - t_0
+        s3.append(s[0]+s[1])
+        l3.append(cpu_time)
+    print("\nStrategie 2")
+    print("Scores")
+    print(s2)
+    print("Moyenne : "+str(np.average(s2)))
+    print("Variance : "+str(np.var(s2)))
+    print("Temps")
+    print(l2)
+    print("Moyenne : "+str(np.average(l2)))
+    print("Variance : "+str(np.var(l2)))
+    print("\nStrategie 3")
+    print("Scores")
+    print(s3)
+    print("Moyenne : "+str(np.average(s3)))
+    print("Variance : "+str(np.var(s3)))
+    print("Temps")
+    print(l3)
+    print("Moyenne : "+str(np.average(l3)))
+    print("Variance : "+str(np.var(l3)))
+    plt.plot(one,s2,"r:*",label="Score2")
+    plt.plot(one,s3,"b--D",label="Score3")
+    plt.legend()
+    plt.show()
+    plt.plot(one,l2,"r:*",label="Temps2")
+    plt.plot(one,l3,"b--D",label="Temps3")
+    plt.legend()
+    plt.show()
     
+""" RESULTAT
+Strategie 2
+Scores
+[14, 15, 13, 15, 13, 17, 19, 17, 14, 16, 17, 14, 14, 14, 14, 16, 14, 10, 14, 18, 14, 16, 15, 13, 13, 10, 15, 11, 15, 15]
+Moyenne : 14.5
+Variance : 4.116666666666666
+Temps
+[6.2352377279999995, 6.200735402000001, 5.951889120000001, 6.315057997000004, 5.890905169, 6.901239794000006, 7.503344162000005, 6.881875170000001, 6.1283889449999975, 6.601897131000001, 6.889416332000025, 6.184557951999977, 6.218825761000005, 6.1903819860000056, 5.894532927, 6.290831411999989, 5.848555075999997, 5.202900751999977, 6.256759888000005, 7.265188911999985, 6.170126574999983, 6.5911349220000375, 6.168832840999983, 5.77520004400003, 5.877945677000014, 5.190549395000005, 6.198941926999964, 5.454908824000029, 6.426713629999995, 6.427396486000021]
+Moyenne : 6.237809064566668
+Variance : 0.26333784115305237
 
+Strategie 3
+Scores
+[17, 14, 14, 13, 13, 12, 10, 14, 16, 18, 18, 13, 16, 14, 17, 17, 17, 16, 18, 19, 20, 17, 15, 12, 9, 17, 14, 15, 20, 17]
+Moyenne : 15.4
+Variance : 7.173333333333334
+Temps
+[7.79428184, 6.9121340520000025, 6.872071962, 6.7014575840000035, 6.562334421999999, 6.481314655000006, 5.802602587999999, 6.8328010519999935, 7.151486187999993, 8.103190691999984, 7.77246624899999, 6.548645265000005, 7.459229977999996, 6.837647973999992, 7.480569334999984, 7.444571126, 7.7209976579999875, 7.392374193999984, 7.8476911580000035, 8.071795827000017, 8.444299247000004, 7.75524539099996, 7.137711651000018, 6.123511039999983, 5.432884219000016, 7.714555302000008, 7.074534193000034, 6.81049422000001, 8.338481307000052, 7.475271569000029]
+Moyenne : 7.203221731266668
+Variance : 0.5047903233319446
+"""
 
